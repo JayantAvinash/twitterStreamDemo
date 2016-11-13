@@ -1,0 +1,86 @@
+* To capture all the tweets from the CNN handle using twitter stream api, run this Java class com.twitter.TwitterDataProcessor. It will capture all the tweets, take all the noun phrases from the tweet using openNLP and store it in DB.
+
+* host this application on any tomcat server(I am using tomcat 8) to  get all the topics discussed and no of times they have been discussed.
+
+* I am using postgres db (you can take db configurations from file hibernate.cfg.xml) and hibernate and getting topics from data using cxf web services.
+
+* To see the list of all the topics discussed in a day and number of times they have been discussed, I have created a very basic frontend. just hit this link on starting the server:
+	http://localhost:8081/twitterStreamDemo/
+ Enter the date and get all the topics discussed on that day and number of times they have been discussed on that day.
+
+
+*DB details: db name: twitterStore
+
+Tables: 
+1.
+
+CREATE TABLE public.topic_details
+(
+  topic_id bigint NOT NULL DEFAULT nextval('topic_details_topic_id_seq'::regclass),
+  date date NOT NULL,
+  frequency integer NOT NULL,
+  topic_name character varying(255) NOT NULL,
+  CONSTRAINT topic_details_pkey PRIMARY KEY (topic_id),
+  CONSTRAINT uki4akyf2my326bwj5oykys7upr UNIQUE (topic_name, date)
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE public.topic_details
+  OWNER TO jayant;
+
+CREATE SEQUENCE public.topic_details_topic_id_seq
+  INCREMENT 1
+  MINVALUE 1
+  MAXVALUE 9223372036854775807
+  START 64
+  CACHE 1;
+ALTER TABLE public.topic_details_topic_id_seq
+  OWNER TO jayant;
+
+2. 
+
+CREATE TABLE public.tweet_details
+(
+  id bigint NOT NULL DEFAULT nextval('tweet_details_id_seq'::regclass),
+  tweet character varying(255) NOT NULL,
+  tweet_date timestamp without time zone NOT NULL,
+  user_id bigint NOT NULL,
+  user_name character varying(255) NOT NULL,
+  CONSTRAINT tweet_details_pkey PRIMARY KEY (id)
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE public.tweet_details
+  OWNER TO jayant;
+
+CREATE SEQUENCE public.tweet_details_id_seq
+  INCREMENT 1
+  MINVALUE 1
+  MAXVALUE 9223372036854775807
+  START 11
+  CACHE 1;
+ALTER TABLE public.tweet_details_id_seq
+  OWNER TO jayant;
+
+3.
+
+CREATE TABLE public.tweet_topic_details
+(
+  topic_id bigint NOT NULL,
+  tweet_id bigint NOT NULL,
+  CONSTRAINT tweet_topic_details_pkey PRIMARY KEY (topic_id, tweet_id),
+  CONSTRAINT fk85d4y1wepevh9bifqiycaxuxj FOREIGN KEY (tweet_id)
+      REFERENCES public.tweet_details (id) MATCH SIMPLE
+      ON UPDATE NO ACTION ON DELETE NO ACTION,
+  CONSTRAINT fka9v4y8kdl1mgssbypph1yl3ae FOREIGN KEY (topic_id)
+      REFERENCES public.topic_details (topic_id) MATCH SIMPLE
+      ON UPDATE NO ACTION ON DELETE NO ACTION
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE public.tweet_topic_details
+  OWNER TO jayant;
+
